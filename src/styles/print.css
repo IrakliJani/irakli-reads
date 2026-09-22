@@ -18,6 +18,15 @@
   margin: 16mm 18mm;
 }
 
+@page numbered {
+  @bottom-center {
+    content: counter(page);
+    color: #6b7280;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -45,6 +54,10 @@ body[data-body-font-size="smaller"] {
   --article-body-font-size: 10pt;
 }
 
+body[data-page-numbers="visible"] {
+  page: numbered;
+}
+
 .article-shell {
   max-width: 780px;
   margin: 0 auto;
@@ -59,7 +72,7 @@ body[data-body-font-size="smaller"] {
 
 .article-title,
 .article-body :is(h1, h2, h3, h4, h5, h6) {
-  font-family: var(--font-sans);
+  font-family: Arial, Helvetica, sans-serif;
   color: #0f172a;
   line-height: 1.16;
   letter-spacing: -0.015em;
@@ -68,7 +81,7 @@ body[data-body-font-size="smaller"] {
 
 .article-title {
   margin: 0 0 0.4rem;
-  font-size: 25pt;
+  font-size: 24pt;
   letter-spacing: -0.03em;
 }
 
@@ -104,15 +117,15 @@ body[data-body-font-size="smaller"] {
 }
 
 .article-body h1 {
-  font-size: 20pt;
+  font-size: 19pt;
 }
 
 .article-body h2 {
-  font-size: 16pt;
+  font-size: 15pt;
 }
 
 .article-body h3 {
-  font-size: 13.5pt;
+  font-size: 12.5pt;
 }
 
 .article-body p {
@@ -190,6 +203,10 @@ body[data-body-font-size="smaller"] {
   color: #374151;
 }
 
+.article-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
 .article-body a[href] {
   color: var(--link);
   font-weight: 600;
@@ -245,6 +262,56 @@ body[data-body-font-size="smaller"] {
 .article-body img {
   max-width: var(--article-image-max-width);
   height: auto;
+}
+
+.article-body img.interactive-screenshot {
+  display: block;
+  width: 80%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.article-body figure.article-figure {
+  width: fit-content;
+  max-width: var(--article-image-max-width);
+  margin: 1rem auto 1.25rem;
+  break-inside: avoid;
+}
+
+.article-body figure.article-figure > img {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+}
+
+.article-body figure > figcaption {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 8.2pt;
+  line-height: 1.4;
+}
+
+.article-body figure.article-figure > figcaption {
+  margin-top: 0.4rem;
+  text-align: center;
+}
+
+.article-body figure.interactive-figure {
+  width: min(80%, var(--article-image-max-width));
+  margin: 1rem auto 1.25rem;
+  break-inside: avoid;
+}
+
+.article-body figure.interactive-figure > img.interactive-screenshot {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.article-body figure.interactive-figure > figcaption {
+  margin-top: 0.45rem;
+  padding: 0.42rem 0.6rem;
+  border-left: 2px solid var(--rule);
 }
 
 body[data-image-sizing="scaled"] .article-body img {

@@ -17,6 +17,7 @@ const source = getString(frontmatter.source);
 const sourceFontStyle = getString(frontmatter.sourceFontStyle);
 const fontStyle = sourceFontStyle === 'sans-serif' ? 'sans-serif' : 'serif';
 const bodyFontSize = frontmatter.bodyFontSizeAdjustment === -1 ? 'smaller' : 'default';
+const pageNumbers = frontmatter.pageNumbers === false ? 'hidden' : 'visible';
 const configuredImageScale = frontmatter.imageScalePercent;
 const imageScalePercent =
   typeof configuredImageScale === 'number' &&
@@ -40,6 +41,7 @@ const meta = [author, date].filter(Boolean).join(' · ');
   <body
     data-font-style={fontStyle}
     data-body-font-size={bodyFontSize}
+    data-page-numbers={pageNumbers}
     data-image-sizing={imageSizing}
     style={printVariables}
   >

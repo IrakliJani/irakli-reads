@@ -7,6 +7,7 @@ URL
   -> Readability extracts article DOM
   -> deterministic cleanup cleans links/code/metadata
   -> Chromium detects whether the source body is serif or sans-serif
+  -> Playwright captures large interactive article sections as static images
   -> Markdown is written without LLM rewriting
   -> Astro renders with the matching local font stack and Shiki GitHub Light
   -> fidelity verifier checks rendered text hash
@@ -18,6 +19,9 @@ Design goals:
 - preserve article prose word-for-word; do not rewrite with an LLM
 - black-on-white article body
 - preserve the source article's serif/sans-serif body category using controlled print font stacks
+- preserve interactive visualizations as 2x screenshots after playback settles, rendered at 80% width
+- extract explanatory text from interactive panels into semantic, consistently styled captions
+- detect code languages with highlight.js plus deterministic Rust/Zig handling
 - light syntax highlighting with Shiki `github-light`
 - links print as `label {clean-url}`
 - descriptions prefer page metadata and are omitted when they repeat the opening prose or contain only a byline
@@ -98,6 +102,8 @@ PDFs are written to `pdfs/<slug>.pdf`. To generate selected articles only:
 pnpm article:pdf -- '<slug-a>' '<slug-b>'
 ```
 
+Page numbers are enabled by default. Set `pageNumbers: false` in an article's frontmatter to omit them; `pageNumbers: true` makes the default explicit.
+
 ## Check TypeScript scripts
 
 ```sh
@@ -122,11 +128,11 @@ Then open `http://localhost:4321/read/<slug>/`.
 
 ## Generated files
 
-Fetched article Markdown, raw HTML, rendered HTML, and PDFs are generated locally under `articles/`, `sources/`, `dist/`, and `pdfs/`. Article Markdown and PDFs are intentionally ignored so the repository does not publish copied article bodies or generated artifacts.
+Fetched article Markdown, raw HTML, interactive screenshots, rendered HTML, and PDFs are generated locally under `articles/`, `sources/`, `public/screenshots/`, `dist/`, and `pdfs/`. These generated article artifacts are intentionally ignored so the repository does not publish copied content.
 
 ## Notes
 
 - Markdown is an archive/editing format, not an excuse to paraphrase.
 - If verification fails, fix extraction/rendering. Do not manually rewrite article prose unless the source page itself requires a deterministic correction.
 - Font detection records `sourceFontStyle` in article frontmatter. It uses rendered source paragraphs when Chromium is available and falls back to the serif stack when detection is unavailable or inconclusive.
-- PDF export uses Playwright/Chromium from the already-rendered print HTML.
+- PDF export serves `dist/` from a temporary local HTTP server so stylesheets and generated screenshots resolve before Playwright/Chromium prints the page.

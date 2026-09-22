@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { access, mkdir, readdir, readFile } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import path from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
 import { chromium, type Browser, type Page } from 'playwright';
 import { articleSlug, errorMessage, parseFrontmatter } from './shared.ts';
 
@@ -43,14 +44,60 @@ async function assertFileExists(filePath: string, hint: string): Promise<void> {
   }
 }
 
-async function renderPdf(page: Page, slug: string): Promise<void> {
+const CONTENT_TYPES: Record<string, string> = {
+  '.css': 'text/css; charset=utf-8',
+  '.gif': 'image/gif',
+  '.html': 'text/html; charset=utf-8',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.js': 'text/javascript; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+};
+
+async function startDistServer(): Promise<{ server: Server; origin: string }> {
+  const root = path.resolve('dist');
+  const server = createServer(async (request, response) => {
+    try {
+      const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
+      const relativePath = pathname.endsWith('/') ? `${pathname}index.html` : pathname;
+      const filePath = path.resolve(root, `.${relativePath}`);
+      if (filePath !== root && !filePath.startsWith(`${root}${path.sep}`)) {
+        response.writeHead(403).end('Forbidden');
+        return;
+      }
+
+      const contents = await readFile(filePath);
+      response.setHeader('content-type', CONTENT_TYPES[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream');
+      response.writeHead(200).end(contents);
+    } catch {
+      response.writeHead(404).end('Not found');
+    }
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address() as AddressInfo;
+  return { server, origin: `http://127.0.0.1:${address.port}` };
+}
+
+async function stopServer(server: Server): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+}
+
+async function renderPdf(page: Page, slug: string, origin: string): Promise<void> {
   const htmlPath = path.join('dist', 'read', slug, 'index.html');
   await assertFileExists(htmlPath, 'Run `pnpm article:render` first.');
 
   const outputPath = path.join('pdfs', `${slug}.pdf`);
   await mkdir(path.dirname(outputPath), { recursive: true });
 
-  await page.goto(pathToFileURL(path.resolve(htmlPath)).href, { waitUntil: 'networkidle' });
+  await page.goto(`${origin}/read/${encodeURIComponent(slug)}/`, { waitUntil: 'networkidle' });
   await page.emulateMedia({ media: 'print' });
   await page.pdf({
     path: outputPath,
@@ -84,15 +131,20 @@ async function main(): Promise<void> {
     throw new Error(`No articles${qualifier} found.`);
   }
 
-  const browser = await launchBrowser();
+  const { server, origin } = await startDistServer();
   try {
-    const page = await browser.newPage({ viewport: { width: 1000, height: 1400 } });
-    for (const article of articles) {
-      await renderPdf(page, article.slug);
+    const browser = await launchBrowser();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1000, height: 1400 } });
+      for (const article of articles) {
+        await renderPdf(page, article.slug, origin);
+      }
+      await page.close();
+    } finally {
+      await browser.close();
     }
-    await page.close();
   } finally {
-    await browser.close();
+    await stopServer(server);
   }
 }
 

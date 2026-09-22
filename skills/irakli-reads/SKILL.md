@@ -28,6 +28,7 @@ Goal: deterministic article print. The article body is evidence, not prose to im
 - No LLM rewriting of article prose. Manual edits are for deterministic cleanup only.
 - Keep scripts TypeScript-only. Node runs `.ts` directly; TypeScript 7 checks them with `pnpm article:check`.
 - Keep code highlighting light; never reintroduce dark syntax backgrounds.
+- Capture large interactive article sections as screenshots rather than flattening or dropping them; extract panel explainers into styled captions.
 - Clean links before render: absolutize relative URLs and strip tracking/referral params.
 - Preserve Markdown as the readable archive, but trust the verifier over visual similarity.
 - See `README.md` for project commands.

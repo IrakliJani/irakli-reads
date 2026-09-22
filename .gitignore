@@ -9,3 +9,4 @@ articles/*.md
 sources/*
 !sources/.gitkeep
 pdfs/*.pdf
+public/screenshots/

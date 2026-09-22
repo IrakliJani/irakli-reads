@@ -21,6 +21,7 @@
     "@astrojs/markdown-satteri": "0.3.3",
     "@mozilla/readability": "latest",
     "astro": "latest",
+    "highlight.js": "^11.11.1",
     "jsdom": "latest",
     "shiki": "latest",
     "turndown": "latest",
